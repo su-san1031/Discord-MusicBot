@@ -2,7 +2,14 @@
 Discordで高音質のストリーミングを可能にし
 会話中に好きな曲を流すことができるBotです
 YotubeとSpotifyの再生に対応しています
-※現在再生リストURLの再生には対応しておりません
+一応再生リストに対応できてるかも
+
+# 更新
+25/05/19
+-YoutubePremium専用楽曲を再生できるように対応しました
+再生するにはPremiumに加入しているアカウントが必要です
+Premium加入アカウントでYoutubeのサイトを開きCookieを取得してください
+youtube_cookies.txtに取得したCookieを記入して起動してください
 
 # Discord 開発ページでの準備
 1. https://discord.com/developers/applications を開いてください
