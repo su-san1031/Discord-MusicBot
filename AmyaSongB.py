@@ -9,13 +9,14 @@ import json
 import os
 import logging
 import pygame
+from playwright.async_api import async_playwright
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyClientCredentials
 from collections import deque
 
 # Spotify APIのクライアントIDとクライアントシークレット
-SPOTIFY_CLIENT_ID = "クライアントIDをここに入力"
-SPOTIFY_CLIENT_SECRET = "クライアントシークレットをここに入力"
+SPOTIFY_CLIENT_ID = "クライアントID"
+SPOTIFY_CLIENT_SECRET = "クライアントシークレット"
 
 # Spotifyクライアントの設定
 spotify = Spotify(auth_manager=SpotifyClientCredentials(
@@ -55,12 +56,41 @@ YDL_OPTIONS = {
     'concurrent-fragments': 5,  # フラグメントの並列ダウンロード数
     'throttled-rate': None,  # 帯域幅制限を解除
     'retries': 10,  # リトライ回数を増加
+    'cookiefile': 'youtube_cookies.txt',  # Cookieの利用
 }
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn -af "volume=0.02, bass=g=0, treble=g=1, aresample=48000"',
     'options': '-vn',  # 映像を無効化
 }
+
+async def get_youtube_music_cookies():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        page = await context.new_page()
+        await page.goto("https://music.youtube.com")
+        print("ログインが完了したらEnterを押してください")
+        input()
+        cookies = await context.cookies()
+        await browser.close()
+
+        # Netscape形式のヘッダー
+        cookie_str = "# Netscape HTTP Cookie File\n"
+        for c in cookies:
+            domain = c['domain']
+            flag = "TRUE" if domain.startswith('.') else "FALSE"
+            path = c['path']
+            secure = "TRUE" if c.get('secure', False) else "FALSE"
+            expiry = int(c['expires']) if c.get('expires') else 0
+            name = c['name']
+            value = c['value']
+            cookie_str += f"{domain}\t{flag}\t{path}\t{secure}\t{expiry}\t{name}\t{value}\n"
+
+        with open("youtube_cookies.txt", "w", encoding="utf-8") as f:
+            f.write(cookie_str)
 
 # キューの保存と復元
 QUEUE_FILE = "queue.json"
@@ -330,7 +360,7 @@ async def amyahelp(interaction: discord.Interaction):
 import asyncio
 
 # トークンを直接指定
-token = "DiscordBotトークンをここに入力"
+token = "トークン"
 
 if not token:
     raise ValueError("トークンが設定されていません。")
